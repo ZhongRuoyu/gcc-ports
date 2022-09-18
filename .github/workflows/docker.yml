@@ -1,0 +1,48 @@
+name: docker
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  docker:
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - tags: |
+              zhongruoyu/gcc-backports:10-stretch
+              zhongruoyu/gcc-backports:10.4-stretch
+              zhongruoyu/gcc-backports:10.4.0-stretch
+            platforms: linux/amd64,linux/arm64
+            build-args: |
+              BASE_IMAGE_TAG=stretch
+              GCC_VERSION=10.4.0
+          - tags: |
+              zhongruoyu/gcc-backports:10-xenial
+              zhongruoyu/gcc-backports:10.4-xenial
+              zhongruoyu/gcc-backports:10.4.0-xenial
+            platforms: linux/amd64,linux/arm64
+            build-args: |
+              BASE_IMAGE_TAG=xenial
+              GCC_VERSION=10.4.0
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push Docker images
+        uses: docker/build-push-action@v3
+        with:
+          tags: ${{ matrix.target.tags }}
+          platforms: ${{ matrix.target.platforms }}
+          build-args: ${{ matrix.target.build-args }}
+          push: true
