@@ -16,7 +16,7 @@ jobs:
               zhongruoyu/gcc-backports:10-stretch
               zhongruoyu/gcc-backports:10.4-stretch
               zhongruoyu/gcc-backports:10.4.0-stretch
-            platforms: linux/amd64,linux/arm64
+            platforms: linux/amd64
             build-args: |
               BASE_IMAGE_TAG=stretch
               GCC_VERSION=10.4.0
@@ -24,7 +24,7 @@ jobs:
               zhongruoyu/gcc-backports:10-xenial
               zhongruoyu/gcc-backports:10.4-xenial
               zhongruoyu/gcc-backports:10.4.0-xenial
-            platforms: linux/amd64,linux/arm64
+            platforms: linux/amd64
             build-args: |
               BASE_IMAGE_TAG=xenial
               GCC_VERSION=10.4.0
