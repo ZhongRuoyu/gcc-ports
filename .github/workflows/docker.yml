@@ -15,6 +15,78 @@ jobs:
       matrix:
         target:
           - tags: |
+              zhongruoyu/gcc-backports:12-buster
+              zhongruoyu/gcc-backports:12.2-buster
+              zhongruoyu/gcc-backports:12.2.0-buster
+            platforms: linux/amd64
+            build-args: |
+              BASE_IMAGE_TAG=buster
+              BINUTILS_VERSION=2.39
+              GCC_VERSION=12.2.0
+          - tags: |
+              zhongruoyu/gcc-backports:12-stretch
+              zhongruoyu/gcc-backports:12.2-stretch
+              zhongruoyu/gcc-backports:12.2.0-stretch
+            platforms: linux/amd64
+            build-args: |
+              BASE_IMAGE_TAG=stretch
+              BINUTILS_VERSION=2.39
+              GCC_VERSION=12.2.0
+          - tags: |
+              zhongruoyu/gcc-backports:12-focal
+              zhongruoyu/gcc-backports:12.2-focal
+              zhongruoyu/gcc-backports:12.2.0-focal
+            platforms: linux/amd64
+            build-args: |
+              BASE_IMAGE_TAG=focal
+              BINUTILS_VERSION=2.39
+              GCC_VERSION=12.2.0
+          - tags: |
+              zhongruoyu/gcc-backports:12-bionic
+              zhongruoyu/gcc-backports:12.2-bionic
+              zhongruoyu/gcc-backports:12.2.0-bionic
+            platforms: linux/amd64
+            build-args: |
+              BASE_IMAGE_TAG=bionic
+              BINUTILS_VERSION=2.39
+              GCC_VERSION=12.2.0
+          - tags: |
+              zhongruoyu/gcc-backports:12-xenial
+              zhongruoyu/gcc-backports:12.2-xenial
+              zhongruoyu/gcc-backports:12.2.0-xenial
+            platforms: linux/amd64
+            build-args: |
+              BASE_IMAGE_TAG=xenial
+              BINUTILS_VERSION=2.39
+              GCC_VERSION=12.2.0
+          - tags: |
+              zhongruoyu/gcc-backports:11-buster
+              zhongruoyu/gcc-backports:11.3-buster
+              zhongruoyu/gcc-backports:11.3.0-buster
+            platforms: linux/amd64
+            build-args: |
+              BASE_IMAGE_TAG=buster
+              BINUTILS_VERSION=2.39
+              GCC_VERSION=11.3.0
+          - tags: |
+              zhongruoyu/gcc-backports:11-stretch
+              zhongruoyu/gcc-backports:11.3-stretch
+              zhongruoyu/gcc-backports:11.3.0-stretch
+            platforms: linux/amd64
+            build-args: |
+              BASE_IMAGE_TAG=stretch
+              BINUTILS_VERSION=2.39
+              GCC_VERSION=11.3.0
+          - tags: |
+              zhongruoyu/gcc-backports:11-xenial
+              zhongruoyu/gcc-backports:11.3-xenial
+              zhongruoyu/gcc-backports:11.3.0-xenial
+            platforms: linux/amd64
+            build-args: |
+              BASE_IMAGE_TAG=xenial
+              BINUTILS_VERSION=2.39
+              GCC_VERSION=11.3.0
+          - tags: |
               zhongruoyu/gcc-backports:10-stretch
               zhongruoyu/gcc-backports:10.4-stretch
               zhongruoyu/gcc-backports:10.4.0-stretch
@@ -32,6 +104,15 @@ jobs:
               BASE_IMAGE_TAG=xenial
               BINUTILS_VERSION=2.39
               GCC_VERSION=10.4.0
+          - tags: |
+              zhongruoyu/gcc-backports:9-stretch
+              zhongruoyu/gcc-backports:9.5-stretch
+              zhongruoyu/gcc-backports:9.5.0-stretch
+            platforms: linux/amd64
+            build-args: |
+              BASE_IMAGE_TAG=stretch
+              BINUTILS_VERSION=2.39
+              GCC_VERSION=9.5.0
     runs-on: ubuntu-latest
     steps:
       - name: Set up QEMU
