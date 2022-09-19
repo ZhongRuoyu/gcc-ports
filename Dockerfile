@@ -86,7 +86,7 @@ RUN set -ex; \
     apt-get install -y --no-install-recommends \
         dpkg-dev \
         flex \
-        # https://github.com/golang/go/issues/45843
+        # https://github.com/docker-library/gcc/pull/74#issuecomment-1250904354
         gawk \
     ; \
     rm -r /var/lib/apt/lists/*; \
