@@ -13,108 +13,32 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target:
-          - tags: |
-              zhongruoyu/gcc-backports:12-buster
-              zhongruoyu/gcc-backports:12.2-buster
-              zhongruoyu/gcc-backports:12.2.0-buster
-            platforms: linux/amd64
-            build-args: |
-              BASE_IMAGE_TAG=buster
-              BINUTILS_VERSION=2.39
-              GCC_VERSION=12.2.0
-          - tags: |
-              zhongruoyu/gcc-backports:12-stretch
-              zhongruoyu/gcc-backports:12.2-stretch
-              zhongruoyu/gcc-backports:12.2.0-stretch
-            platforms: linux/amd64
-            build-args: |
-              BASE_IMAGE_TAG=stretch
-              BINUTILS_VERSION=2.39
-              GCC_VERSION=12.2.0
-          - tags: |
-              zhongruoyu/gcc-backports:12-focal
-              zhongruoyu/gcc-backports:12.2-focal
-              zhongruoyu/gcc-backports:12.2.0-focal
-            platforms: linux/amd64
-            build-args: |
-              BASE_IMAGE_TAG=focal
-              BINUTILS_VERSION=2.39
-              GCC_VERSION=12.2.0
-          - tags: |
-              zhongruoyu/gcc-backports:12-bionic
-              zhongruoyu/gcc-backports:12.2-bionic
-              zhongruoyu/gcc-backports:12.2.0-bionic
-            platforms: linux/amd64
-            build-args: |
-              BASE_IMAGE_TAG=bionic
-              BINUTILS_VERSION=2.39
-              GCC_VERSION=12.2.0
-          - tags: |
-              zhongruoyu/gcc-backports:12-xenial
-              zhongruoyu/gcc-backports:12.2-xenial
-              zhongruoyu/gcc-backports:12.2.0-xenial
-            platforms: linux/amd64
-            build-args: |
-              BASE_IMAGE_TAG=xenial
-              BINUTILS_VERSION=2.39
-              GCC_VERSION=12.2.0
-          - tags: |
-              zhongruoyu/gcc-backports:11-buster
-              zhongruoyu/gcc-backports:11.3-buster
-              zhongruoyu/gcc-backports:11.3.0-buster
-            platforms: linux/amd64
-            build-args: |
-              BASE_IMAGE_TAG=buster
-              BINUTILS_VERSION=2.39
-              GCC_VERSION=11.3.0
-          - tags: |
-              zhongruoyu/gcc-backports:11-stretch
-              zhongruoyu/gcc-backports:11.3-stretch
-              zhongruoyu/gcc-backports:11.3.0-stretch
-            platforms: linux/amd64
-            build-args: |
-              BASE_IMAGE_TAG=stretch
-              BINUTILS_VERSION=2.39
-              GCC_VERSION=11.3.0
-          - tags: |
-              zhongruoyu/gcc-backports:11-xenial
-              zhongruoyu/gcc-backports:11.3-xenial
-              zhongruoyu/gcc-backports:11.3.0-xenial
-            platforms: linux/amd64
-            build-args: |
-              BASE_IMAGE_TAG=xenial
-              BINUTILS_VERSION=2.39
-              GCC_VERSION=11.3.0
-          - tags: |
-              zhongruoyu/gcc-backports:10-stretch
-              zhongruoyu/gcc-backports:10.4-stretch
-              zhongruoyu/gcc-backports:10.4.0-stretch
-            platforms: linux/amd64
-            build-args: |
-              BASE_IMAGE_TAG=stretch
-              BINUTILS_VERSION=2.39
-              GCC_VERSION=10.4.0
-          - tags: |
-              zhongruoyu/gcc-backports:10-xenial
-              zhongruoyu/gcc-backports:10.4-xenial
-              zhongruoyu/gcc-backports:10.4.0-xenial
-            platforms: linux/amd64
-            build-args: |
-              BASE_IMAGE_TAG=xenial
-              BINUTILS_VERSION=2.39
-              GCC_VERSION=10.4.0
-          - tags: |
-              zhongruoyu/gcc-backports:9-stretch
-              zhongruoyu/gcc-backports:9.5-stretch
-              zhongruoyu/gcc-backports:9.5.0-stretch
-            platforms: linux/amd64
-            build-args: |
-              BASE_IMAGE_TAG=stretch
-              BINUTILS_VERSION=2.39
-              GCC_VERSION=9.5.0
+        base-image-tag:
+          - bullseye
+          - buster
+          - stretch
+          - jammy
+          - focal
+          - bionic
+          - xenial
+        gcc-version:
+          - 12.2.0
+          - 11.3.0
+          - 10.4.0
+          - 9.5.0
+    env:
+      DOCKERHUB_REPOSITORY: zhongruoyu/gcc-ports
+      PLATFORMS: linux/amd64
+      BINUTILS_VERSION: 2.39
     runs-on: ubuntu-latest
     steps:
+      - name: Set environment variables
+        run: |
+          echo "BASE_IMAGE_TAG=${{ matrix.base-image-tag }}" | tee -a "$GITHUB_ENV"
+          echo "GCC_VERSION=${{ matrix.gcc-version }}" | tee -a "$GITHUB_ENV"
+          echo "GCC_VERSION_MAJOR=$(echo "${{ matrix.gcc-version }}" | cut -d '.' -f 1)" | tee -a "$GITHUB_ENV"
+          echo "GCC_VERSION_MINOR=$(echo "${{ matrix.gcc-version }}" | cut -d '.' -f 2)" | tee -a "$GITHUB_ENV"
+          echo "GCC_VERSION_REVISION=$(echo "${{ matrix.gcc-version }}" | cut -d '.' -f 3)" | tee -a "$GITHUB_ENV"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -127,7 +51,13 @@ jobs:
       - name: Build and push Docker images
         uses: docker/build-push-action@v3
         with:
-          tags: ${{ matrix.target.tags }}
-          platforms: ${{ matrix.target.platforms }}
-          build-args: ${{ matrix.target.build-args }}
+          tags: |
+            ${{ env.DOCKERHUB_REPOSITORY }}:${{ env.GCC_VERSION_MAJOR }}-${{ env.BASE_IMAGE_TAG }}
+            ${{ env.DOCKERHUB_REPOSITORY }}:${{ env.GCC_VERSION_MAJOR }}.${{ env.GCC_VERSION_MINOR }}-${{ env.BASE_IMAGE_TAG }}
+            ${{ env.DOCKERHUB_REPOSITORY }}:${{ env.GCC_VERSION_MAJOR }}.${{ env.GCC_VERSION_MINOR }}.${{ env.GCC_VERSION_REVISION }}-${{ env.BASE_IMAGE_TAG }}
+          platforms: ${{ env.PLATFORMS }}
+          build-args: |
+            BASE_IMAGE_TAG=${{ env.BASE_IMAGE_TAG }}
+            BINUTILS_VERSION=${{ env.BINUTILS_VERSION }}
+            GCC_VERSION=${{ env.GCC_VERSION }}
           push: true
