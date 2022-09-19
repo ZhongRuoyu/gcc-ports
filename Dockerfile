@@ -11,6 +11,39 @@ RUN set -ex; \
         rm -rf /var/lib/apt/lists/*; \
     fi
 
+ARG BINUTILS_VERSION
+ENV BINUTILS_VERSION ${BINUTILS_VERSION}
+
+RUN set -ex; \
+    \
+    # 4096R/DD9E3C4F 2017-09-18 Nick Clifton (Chief Binutils Maintainer) <nickc@redhat.com>
+    gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 3A24BC1E8FB409FA9F14371813FCEF89DD9E3C4F; \
+    \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        bison \
+        texinfo \
+    ; \
+    rm -r /var/lib/apt/lists/*; \
+    \
+    curl -fL "ftp://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.xz.sig" -o 'binutils.tar.xz.sig'; \
+    curl -fL "ftp://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.xz" -o 'binutils.tar.xz'; \
+    gpg --batch --verify binutils.tar.xz.sig binutils.tar.xz; \
+    mkdir -p /usr/src/binutils; \
+    tar -xf binutils.tar.xz -C /usr/src/binutils --strip-components=1; \
+    rm binutils.tar.xz*; \
+    \
+    dir="$(mktemp -d)"; \
+    cd "$dir"; \
+    \
+    /usr/src/binutils/configure; \
+    make -j "$(nproc)"; \
+    make install-strip; \
+    \
+    cd ..; \
+    \
+    rm -rf "$dir" /usr/src/binutils;
+
 # https://gcc.gnu.org/mirrors.html
 ENV GPG_KEYS \
 # 1024D/745C015A 1999-11-09 Gerald Pfeifer <gerald@pfeifer.com>

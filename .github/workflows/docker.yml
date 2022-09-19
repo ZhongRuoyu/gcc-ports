@@ -21,6 +21,7 @@ jobs:
             platforms: linux/amd64
             build-args: |
               BASE_IMAGE_TAG=stretch
+              BINUTILS_VERSION=2.39
               GCC_VERSION=10.4.0
           - tags: |
               zhongruoyu/gcc-backports:10-xenial
@@ -29,6 +30,7 @@ jobs:
             platforms: linux/amd64
             build-args: |
               BASE_IMAGE_TAG=xenial
+              BINUTILS_VERSION=2.39
               GCC_VERSION=10.4.0
     runs-on: ubuntu-latest
     steps:
