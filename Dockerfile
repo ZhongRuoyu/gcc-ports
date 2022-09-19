@@ -42,7 +42,7 @@ RUN set -ex; \
     \
     cd ..; \
     \
-    rm -rf "$dir" /usr/src/binutils;
+    rm -rf "$dir" /usr/src/binutils
 
 # https://gcc.gnu.org/mirrors.html
 ENV GPG_KEYS \
