@@ -1,4 +1,4 @@
-# gcc-ports
+# GCC Ports
 
 This project ports [GCC](https://gcc.gnu.org/), the GNU Compiler Collection, to
 all recent Debian and Ubuntu releases. This enables executables that require
@@ -11,18 +11,18 @@ The ports are available as Docker images at
 from, and remain highly compatible with, Docker's
 [official images](https://github.com/docker-library/gcc) (under
 [GPL-3.0 License](https://github.com/docker-library/gcc/blob/master/LICENSE)).
-They also ship with the latest release of
+They also come with the latest release of
 [GNU Binutils](https://www.gnu.org/software/binutils/) (currently version
 2.39).
 
 The image tags are in the format of `version-codename`, where `version` is the
-GCC version, and `codename` is the codename of the Debian/Ubuntu release. For
-example, tag `12.2.0-jammy` refers to the image with GCC version 12.2.0 on
+GCC release version, and `codename` is the codename of the Debian/Ubuntu
+release. For example, tag `12.2.0-jammy` refers to the image with GCC 12.2.0 on
 Ubuntu 22.04 (Jammy Jellyfish).
 
-The following GCC versions are available:
+The following GCC releases are available:
 
-| GCC version | versions as appeared in tags |
+| GCC release | versions as appeared in tags |
 | ----------- | ---------------------------- |
 | GCC 12.2.0  | `12`, `12.2`, `12.2.0`       |
 | GCC 11.3.0  | `11`, `11.3`, `11.3.0`       |
