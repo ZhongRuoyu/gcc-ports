@@ -26,14 +26,14 @@ jobs:
           - bionic
           - xenial
         gcc-version:
-          - 12.2.0
-          - 11.3.0
-          - 10.4.0
-          - 9.5.0
+          - "12.2.0"
+          - "11.3.0"
+          - "10.4.0"
+          - "9.5.0"
     env:
       DOCKERHUB_REPOSITORY: zhongruoyu/gcc-ports
       PLATFORMS: linux/amd64
-      BINUTILS_VERSION: 2.40
+      BINUTILS_VERSION: "2.40"
     runs-on: ubuntu-latest
     steps:
       - name: Set environment variables
