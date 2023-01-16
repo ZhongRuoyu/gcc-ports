@@ -38,11 +38,13 @@ jobs:
     steps:
       - name: Set environment variables
         run: |
-          echo "BASE_IMAGE_TAG=${{ matrix.base-image-tag }}" | tee -a "$GITHUB_ENV"
-          echo "GCC_VERSION=${{ matrix.gcc-version }}" | tee -a "$GITHUB_ENV"
-          echo "GCC_VERSION_MAJOR=$(echo "${{ matrix.gcc-version }}" | cut -d '.' -f 1)" | tee -a "$GITHUB_ENV"
-          echo "GCC_VERSION_MINOR=$(echo "${{ matrix.gcc-version }}" | cut -d '.' -f 2)" | tee -a "$GITHUB_ENV"
-          echo "GCC_VERSION_REVISION=$(echo "${{ matrix.gcc-version }}" | cut -d '.' -f 3)" | tee -a "$GITHUB_ENV"
+          cat <<EOF | tee -a "$GITHUB_ENV"
+          BASE_IMAGE_TAG=${{ matrix.base-image-tag }}
+          GCC_VERSION=${{ matrix.gcc-version }}
+          GCC_VERSION_MAJOR=$(echo "${{ matrix.gcc-version }}" | cut -d '.' -f 1)
+          GCC_VERSION_MINOR=$(echo "${{ matrix.gcc-version }}" | cut -d '.' -f 2)
+          GCC_VERSION_REVISION=$(echo "${{ matrix.gcc-version }}" | cut -d '.' -f 3)
+          EOF
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
