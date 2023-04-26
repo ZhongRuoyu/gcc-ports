@@ -36,7 +36,6 @@ The following Debian/Ubuntu releases are available:
 | ------------------------------ | ---------------------------- |
 | Debian 11 (Bullseye)           | `bullseye`                   |
 | Debian 10 (Buster)             | `buster`                     |
-| Debian 9 (Stretch)             | `stretch`                    |
 | Ubuntu 22.04 (Jammy Jellyfish) | `jammy`                      |
 | Ubuntu 20.04 (Focal Fossa)     | `focal`                      |
 | Ubuntu 18.04 (Bionic Beaver)   | `bionic`                     |
