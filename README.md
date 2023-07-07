@@ -27,7 +27,7 @@ The following GCC releases are available:
 | GCC 13.1.0  | `13`, `13.1`, `13.1.0`       |
 | GCC 12.3.0  | `12`, `12.3`, `12.3.0`       |
 | GCC 11.4.0  | `11`, `11.4`, `11.4.0`       |
-| GCC 10.4.0  | `10`, `10.4`, `10.4.0`       |
+| GCC 10.5.0  | `10`, `10.5`, `10.5.0`       |
 | GCC 9.5.0   | `9`, `9.5`, `9.5.0`          |
 
 The following Debian/Ubuntu releases are available:
