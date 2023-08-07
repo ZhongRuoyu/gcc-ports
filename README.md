@@ -34,6 +34,7 @@ The following Debian/Ubuntu releases are available:
 
 | Release                        | codename as appeared in tags |
 | ------------------------------ | ---------------------------- |
+| Debian 12 (Bookworm)           | `bookworm`                   |
 | Debian 11 (Bullseye)           | `bullseye`                   |
 | Debian 10 (Buster)             | `buster`                     |
 | Ubuntu 22.04 (Jammy Jellyfish) | `jammy`                      |
