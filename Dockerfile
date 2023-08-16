@@ -2,14 +2,13 @@ ARG BASE_IMAGE_TAG
 FROM buildpack-deps:${BASE_IMAGE_TAG}
 
 RUN set -ex; \
-    if ! command -v gpg > /dev/null; then \
-        apt-get update; \
-        apt-get install -y --no-install-recommends \
-            gnupg \
-            dirmngr \
-        ; \
-        rm -rf /var/lib/apt/lists/*; \
-    fi
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        gnupg \
+    ; \
+    rm -rf /var/lib/apt/lists/*; \
+    mkdir ~/.gnupg; \
+    echo "disable-ipv6" >> ~/.gnupg/dirmngr.conf
 
 ARG BINUTILS_VERSION
 ENV BINUTILS_VERSION ${BINUTILS_VERSION}
