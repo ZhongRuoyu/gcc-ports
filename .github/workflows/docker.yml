@@ -34,7 +34,7 @@ jobs:
     env:
       DOCKERHUB_REPOSITORY: zhongruoyu/gcc-ports
       PLATFORMS: linux/amd64
-      BINUTILS_VERSION: "2.41"
+      BINUTILS_VERSION: "2.42"
     runs-on: ubuntu-latest
     steps:
       - name: Set environment variables
