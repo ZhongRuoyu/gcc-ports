@@ -13,7 +13,7 @@ from, and remain highly compatible with, Docker's
 [GPL-3.0 License](https://github.com/docker-library/gcc/blob/master/LICENSE)).
 They also come with the latest release of
 [GNU Binutils](https://www.gnu.org/software/binutils/) (currently version
-2.42).
+2.43.1).
 
 The image tags are in the format of `version-codename`, where `version` is the
 GCC release version, and `codename` is the codename of the Debian/Ubuntu
