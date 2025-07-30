@@ -37,7 +37,6 @@ The following Debian/Ubuntu releases are available:
 | ------------------------------ | ---------------------------- |
 | Debian 12 (Bookworm)           | `bookworm`                   |
 | Debian 11 (Bullseye)           | `bullseye`                   |
-| Debian 10 (Buster)             | `buster`                     |
 | Ubuntu 24.04 (Noble Numbat)    | `noble`                      |
 | Ubuntu 22.04 (Jammy Jellyfish) | `jammy`                      |
 | Ubuntu 20.04 (Focal Fossa)     | `focal`                      |
