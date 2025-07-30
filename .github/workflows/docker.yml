@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BINUTILS_VERSION: "2.44"
+  BINUTILS_VERSION: "2.45"
 
 jobs:
   docker:
