@@ -16,7 +16,7 @@ env:
   BINUTILS_VERSION: "2.45"
 
 jobs:
-  docker:
+  build:
     strategy:
       fail-fast: false
       matrix:
@@ -36,18 +36,16 @@ jobs:
           - focal
           - bionic
           - xenial
-    name: ${{ matrix.gcc-version }} - ${{ matrix.base-image-tag }}
+        arch:
+          - x86_64
+          - aarch64
+    name: Build ${{ matrix.gcc-version }} - ${{ matrix.base-image-tag }} (${{ matrix.arch }})
     env:
-      BASE_IMAGE_TAG: ${{ matrix.base-image-tag }}
       GCC_VERSION: ${{ matrix.gcc-version }}
-    runs-on: ubuntu-latest
+      BASE_IMAGE_TAG: ${{ matrix.base-image-tag }}
+      ARCH: ${{ matrix.arch }}
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     steps:
-      - name: Determine build attributes
-        run: |
-          cat <<EOF | tee -a "$GITHUB_ENV"
-          GCC_VERSION_MAJOR=$(echo "${GCC_VERSION}" | cut -d '.' -f 1)
-          GCC_VERSION_MAJOR_MINOR=$(echo "${GCC_VERSION}" | cut -d '.' -f 1-2)
-          EOF
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to Docker Hub
@@ -55,15 +53,73 @@ jobs:
         with:
           username: zhongruoyu
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build and push Docker images
+      - name: Build and push Docker image by digest
+        id: build
         uses: docker/build-push-action@v6
         with:
-          tags: |
-            zhongruoyu/gcc-ports:${{ env.GCC_VERSION }}-${{ env.BASE_IMAGE_TAG }}
-            zhongruoyu/gcc-ports:${{ env.GCC_VERSION_MAJOR_MINOR }}-${{ env.BASE_IMAGE_TAG }}
-            zhongruoyu/gcc-ports:${{ env.GCC_VERSION_MAJOR }}-${{ env.BASE_IMAGE_TAG }}
+          platforms: linux/${{ matrix.arch }}
           build-args: |
             BASE_IMAGE_TAG=${{ env.BASE_IMAGE_TAG }}
             BINUTILS_VERSION=${{ env.BINUTILS_VERSION }}
             GCC_VERSION=${{ env.GCC_VERSION }}
-          push: true
+          outputs: type=image,name=zhongruoyu/gcc-ports,name-canonical=true,push=true,push-by-digest=true
+      - name: Export digest
+        run: |
+          mkdir -p "$RUNNER_TEMP"/digests
+          echo "${DIGEST#sha256:}" > "$RUNNER_TEMP/digests/$GCC_VERSION-$BASE_IMAGE_TAG-$ARCH"
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.gcc-version }}-${{ matrix.base-image-tag }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+
+  merge:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        gcc-version:
+          - "15.1.0"
+          - "14.3.0"
+          - "13.4.0"
+          - "12.5.0"
+          - "11.5.0"
+          - "10.5.0"
+          - "9.5.0"
+        base-image-tag:
+          - bookworm
+          - bullseye
+          - noble
+          - jammy
+          - focal
+          - bionic
+          - xenial
+    name: Merge ${{ matrix.gcc-version }} - ${{ matrix.base-image-tag }}
+    env:
+      GCC_VERSION: ${{ matrix.gcc-version }}
+      BASE_IMAGE_TAG: ${{ matrix.base-image-tag }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: zhongruoyu
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digest-${{ matrix.gcc-version }}-${{ matrix.base-image-tag }}-*
+          merge-multiple: true
+      - name: Create manifest list and push
+        run: |
+          docker buildx imagetools create \
+            --tag="zhongruoyu/gcc-ports:$GCC_VERSION-$BASE_IMAGE_TAG" \
+            --tag="zhongruoyu/gcc-ports:$(echo "$GCC_VERSION" | cut -d '.' -f 1-2)-$BASE_IMAGE_TAG" \
+            --tag="zhongruoyu/gcc-ports:$(echo "$GCC_VERSION" | cut -d '.' -f 1)-$BASE_IMAGE_TAG" \
+            zhongruoyu/gcc-ports@sha256:"$(cat "$RUNNER_TEMP/digests/$GCC_VERSION-$BASE_IMAGE_TAG-x86_64")" \
+            zhongruoyu/gcc-ports@sha256:"$(cat "$RUNNER_TEMP/digests/$GCC_VERSION-$BASE_IMAGE_TAG-aarch64")"
