@@ -29,6 +29,7 @@ jobs:
           - "10.5.0"
           - "9.5.0"
         base-image-tag:
+          - trixie
           - bookworm
           - bullseye
           - noble
@@ -89,6 +90,7 @@ jobs:
           - "10.5.0"
           - "9.5.0"
         base-image-tag:
+          - trixie
           - bookworm
           - bullseye
           - noble
