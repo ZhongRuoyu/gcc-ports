@@ -13,7 +13,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BINUTILS_VERSION: "2.45"
+  DOCKERHUB_USERNAME: zhongruoyu
+  DOCKERHUB_REPOSITORY: zhongruoyu/gcc-ports
+  GHCR_USERNAME: zhongruoyu
+  GHCR_REPOSITORY: ghcr.io/zhongruoyu/gcc-ports
 
 jobs:
   build:
@@ -41,29 +44,44 @@ jobs:
           - x86_64
           - aarch64
     name: Build ${{ matrix.gcc-version }} - ${{ matrix.base-image-tag }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    permissions:
+      contents: read
+      packages: write
     env:
       GCC_VERSION: ${{ matrix.gcc-version }}
       BASE_IMAGE_TAG: ${{ matrix.base-image-tag }}
       ARCH: ${{ matrix.arch }}
-    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Load build environment
+        run: cat build.env >> "$GITHUB_ENV"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: zhongruoyu
+          username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ env.GHCR_USERNAME }}
+          password: ${{ github.token }}
       - name: Build and push Docker image by digest
         id: build
         uses: docker/build-push-action@v6
         with:
           platforms: linux/${{ matrix.arch }}
           build-args: |
-            BASE_IMAGE_TAG=${{ env.BASE_IMAGE_TAG }}
-            BINUTILS_VERSION=${{ env.BINUTILS_VERSION }}
-            GCC_VERSION=${{ env.GCC_VERSION }}
-          outputs: type=image,name=zhongruoyu/gcc-ports,name-canonical=true,push=true,push-by-digest=true
+            BASE_IMAGE=public.ecr.aws/docker/library/buildpack-deps:${{ env.BASE_IMAGE_TAG }}
+            GCC_VERSION
+            BINUTILS_VERSION
+          outputs: |
+            type=image,name=${{ env.DOCKERHUB_REPOSITORY }},name-canonical=true,push=true,push-by-digest=true
+            type=image,name=${{ env.GHCR_REPOSITORY }},name-canonical=true,push=true,push-by-digest=true
       - name: Export digest
         run: |
           mkdir -p "$RUNNER_TEMP"/digests
@@ -99,20 +117,29 @@ jobs:
           - bionic
           - xenial
     name: Merge ${{ matrix.gcc-version }} - ${{ matrix.base-image-tag }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     env:
       GCC_VERSION: ${{ matrix.gcc-version }}
       BASE_IMAGE_TAG: ${{ matrix.base-image-tag }}
-    runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: zhongruoyu
+          username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ env.GHCR_USERNAME }}
+          password: ${{ github.token }}
       - name: Download digests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: ${{ runner.temp }}/digests
           pattern: digest-${{ matrix.gcc-version }}-${{ matrix.base-image-tag }}-*
@@ -120,8 +147,11 @@ jobs:
       - name: Create manifest list and push
         run: |
           docker buildx imagetools create \
-            --tag="zhongruoyu/gcc-ports:$GCC_VERSION-$BASE_IMAGE_TAG" \
-            --tag="zhongruoyu/gcc-ports:$(echo "$GCC_VERSION" | cut -d '.' -f 1-2)-$BASE_IMAGE_TAG" \
-            --tag="zhongruoyu/gcc-ports:$(echo "$GCC_VERSION" | cut -d '.' -f 1)-$BASE_IMAGE_TAG" \
-            zhongruoyu/gcc-ports@sha256:"$(cat "$RUNNER_TEMP/digests/$GCC_VERSION-$BASE_IMAGE_TAG-x86_64")" \
-            zhongruoyu/gcc-ports@sha256:"$(cat "$RUNNER_TEMP/digests/$GCC_VERSION-$BASE_IMAGE_TAG-aarch64")"
+            --tag="$DOCKERHUB_REPOSITORY:$GCC_VERSION-$BASE_IMAGE_TAG" \
+            --tag="$DOCKERHUB_REPOSITORY:$(echo "$GCC_VERSION" | cut -d '.' -f 1-2)-$BASE_IMAGE_TAG" \
+            --tag="$DOCKERHUB_REPOSITORY:$(echo "$GCC_VERSION" | cut -d '.' -f 1)-$BASE_IMAGE_TAG" \
+            --tag="$GHCR_REPOSITORY:$GCC_VERSION-$BASE_IMAGE_TAG" \
+            --tag="$GHCR_REPOSITORY:$(echo "$GCC_VERSION" | cut -d '.' -f 1-2)-$BASE_IMAGE_TAG" \
+            --tag="$GHCR_REPOSITORY:$(echo "$GCC_VERSION" | cut -d '.' -f 1)-$BASE_IMAGE_TAG" \
+            "$GHCR_REPOSITORY@sha256:$(cat "$RUNNER_TEMP/digests/$GCC_VERSION-$BASE_IMAGE_TAG-x86_64")" \
+            "$GHCR_REPOSITORY@sha256:$(cat "$RUNNER_TEMP/digests/$GCC_VERSION-$BASE_IMAGE_TAG-aarch64")"

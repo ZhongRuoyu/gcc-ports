@@ -1,5 +1,5 @@
-ARG BASE_IMAGE_TAG
-FROM buildpack-deps:${BASE_IMAGE_TAG}
+ARG BASE_IMAGE
+FROM "${BASE_IMAGE}"
 
 RUN set -ex; \
     apt-get update; \

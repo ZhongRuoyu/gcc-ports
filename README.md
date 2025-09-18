@@ -7,8 +7,9 @@ newer toolchains to be built on specific systems for distribution purposes.
 ## Images
 
 The ports are available as Docker images at
-[Docker Hub](https://hub.docker.com/r/zhongruoyu/gcc-ports). They are modified
-from, and remain highly compatible with, Docker's
+[Docker Hub](https://hub.docker.com/r/zhongruoyu/gcc-ports) and
+[GitHub Container Registry](https://ghcr.io/zhongruoyu/gcc-ports).
+They are modified from, and remain compatible with, Docker's
 [official images](https://github.com/docker-library/gcc) (under
 [GPL-3.0 License](https://github.com/docker-library/gcc/blob/master/LICENSE)).
 They also come with the latest release of
@@ -43,9 +44,6 @@ The following Debian/Ubuntu releases are available:
 | Ubuntu 20.04 (Focal Fossa)     | `focal`                      |
 | Ubuntu 18.04 (Bionic Beaver)   | `bionic`                     |
 | Ubuntu 16.04 (Xenial Xerus)    | `xenial`                     |
-
-See [here](https://hub.docker.com/r/zhongruoyu/gcc-ports/tags) for a complete
-list of tags.
 
 ## License
 
