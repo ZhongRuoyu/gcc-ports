@@ -20,8 +20,8 @@ RUN set -ex; \
   ; \
   rm -r /var/lib/apt/lists/*; \
   \
-  curl -fL "ftp://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.xz.sig" -o 'binutils.tar.xz.sig'; \
-  curl -fL "ftp://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.xz" -o 'binutils.tar.xz'; \
+  curl -fL "https://ftpmirror.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.xz.sig" -o 'binutils.tar.xz.sig'; \
+  curl -fL "https://ftpmirror.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.xz" -o 'binutils.tar.xz'; \
   export GNUPGHOME="$(mktemp -d)"; \
   # 4096R/DD9E3C4F 2017-09-18 Nick Clifton (Chief Binutils Maintainer) <nickc@redhat.com>
   gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 3A24BC1E8FB409FA9F14371813FCEF89DD9E3C4F; \
