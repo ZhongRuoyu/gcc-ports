@@ -25,6 +25,8 @@ RUN set -ex; \
   export GNUPGHOME="$(mktemp -d)"; \
   # 4096R/DD9E3C4F 2017-09-18 Nick Clifton (Chief Binutils Maintainer) <nickc@redhat.com>
   gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 3A24BC1E8FB409FA9F14371813FCEF89DD9E3C4F; \
+  # 4096R/20DF9190 2020-03-04 Sam James <sam@gentoo.org>
+  gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 25A6BB88DD9B764C6B5541C2738409F520DF9190; \
   gpg --batch --verify binutils.tar.xz.sig binutils.tar.xz; \
   gpgconf --kill all || killall gpg-agent dirmngr || true; \
   rm -rf "$GNUPGHOME"; \
