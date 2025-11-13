@@ -62,6 +62,7 @@ jobs:
             BASE_IMAGE=public.ecr.aws/docker/library/buildpack-deps:${{ env.BASE_IMAGE_TAG }}
             GCC_VERSION
             BINUTILS_VERSION
+            BINUTILS_SHA256
           outputs: |
             type=image,name=${{ env.DOCKERHUB_REPOSITORY }},name-canonical=true,push=true,push-by-digest=true
             type=image,name=${{ env.GHCR_REPOSITORY }},name-canonical=true,push=true,push-by-digest=true

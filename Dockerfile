@@ -1,15 +1,9 @@
 ARG BASE_IMAGE="buildpack-deps:latest"
 FROM "${BASE_IMAGE}"
 
-RUN set -ex; \
-  apt-get update; \
-  apt-get install -y --no-install-recommends \
-    gnupg \
-  ; \
-  rm -rf /var/lib/apt/lists/*
-
 ARG BINUTILS_VERSION
 ENV BINUTILS_VERSION="${BINUTILS_VERSION}"
+ARG BINUTILS_SHA256
 
 RUN set -ex; \
   \
@@ -20,19 +14,11 @@ RUN set -ex; \
   ; \
   rm -r /var/lib/apt/lists/*; \
   \
-  curl -fL "https://ftpmirror.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.xz.sig" -o 'binutils.tar.xz.sig'; \
   curl -fL "https://ftpmirror.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.xz" -o 'binutils.tar.xz'; \
-  export GNUPGHOME="$(mktemp -d)"; \
-  # 4096R/DD9E3C4F 2017-09-18 Nick Clifton (Chief Binutils Maintainer) <nickc@redhat.com>
-  gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 3A24BC1E8FB409FA9F14371813FCEF89DD9E3C4F; \
-  # 4096R/20DF9190 2020-03-04 Sam James <sam@gentoo.org>
-  gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 25A6BB88DD9B764C6B5541C2738409F520DF9190; \
-  gpg --batch --verify binutils.tar.xz.sig binutils.tar.xz; \
-  gpgconf --kill all || killall gpg-agent dirmngr || true; \
-  rm -rf "$GNUPGHOME"; \
+  echo "${BINUTILS_SHA256}  binutils.tar.xz" | sha256sum -c; \
   mkdir -p /usr/src/binutils; \
   tar -xf binutils.tar.xz -C /usr/src/binutils --strip-components=1; \
-  rm binutils.tar.xz*; \
+  rm binutils.tar.xz; \
   \
   dir="$(mktemp -d)"; \
   cd "$dir"; \
@@ -86,6 +72,7 @@ RUN set -ex; \
     flex \
     # https://github.com/docker-library/gcc/pull/74#issuecomment-1250904354
     gawk \
+    gnupg \
   ; \
   rm -r /var/lib/apt/lists/*; \
   \
