@@ -1,0 +1,35 @@
+From 9acc8942a926a85e7e66c804fb9c88c4a6dd5305 Mon Sep 17 00:00:00 2001
+From: Ian Lance Taylor <iant@golang.org>
+Date: Wed, 29 Jun 2022 15:32:04 -0700
+Subject: [PATCH] libgo: handle stat st_atim32 field and SYS_SECCOMP
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Patches for musl support, from Sören Tempel.
+
+Fixes PR go/105225
+
+Reviewed-on: https://go-review.googlesource.com/c/gofrontend/+/415294
+
+diff --git a/libgo/mksysinfo.sh b/libgo/mksysinfo.sh
+index 0c52ea5d71a9032eb7bbf596b43db906fadc85ff..72640e94f3717de9adcf9e4b8494ad5a182ebf7c 100755
+--- a/libgo/mksysinfo.sh
++++ b/libgo/mksysinfo.sh
+@@ -127,6 +127,7 @@ fi
+ 
+ # The syscall numbers.  We force the names to upper case.
+ grep '^const _SYS_' gen-sysinfo.go | \
++  grep -v '^const _SYS_SECCOMP = ' | \
+   sed -e 's/const _\(SYS_[^= ]*\).*$/\1/' | \
+   while read sys; do
+     sup=`echo $sys | tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`
+@@ -510,7 +511,7 @@ fi
+ 
+ # For historical reasons Go uses the suffix "timespec" instead of "tim" for
+ # stat_t's time fields on NetBSD.
+-st_times='-e s/st_atim/Atim/ -e s/st_mtim/Mtim/ -e s/st_ctim/Ctim/'
++st_times='-e s/st_atim/Atim/g -e s/st_mtim/Mtim/g -e s/st_ctim/Ctim/g'
+ if test "${GOOS}" = "netbsd"; then
+     st_times='-e s/st_atim/Atimespec/ -e s/st_mtim/Mtimespec/ -e s/st_ctim/Ctimespec/'
+ fi

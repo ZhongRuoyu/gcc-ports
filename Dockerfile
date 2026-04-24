@@ -23,7 +23,7 @@ RUN set -ex; \
   dir="$(mktemp -d)"; \
   cd "$dir"; \
   \
-  /usr/src/binutils/configure; \
+  /usr/src/binutils/configure CFLAGS="-Wno-error=discarded-qualifiers"; \
   make -j "$(nproc)"; \
   make install-strip; \
   \
@@ -63,6 +63,7 @@ ENV GCC_MIRRORS="\
 ARG GCC_VERSION
 ENV GCC_VERSION="${GCC_VERSION}"
 
+COPY patches/gcc /usr/src/gcc/patches
 RUN set -ex; \
   \
   savedAptMark="$(apt-mark showmanual)"; \
@@ -115,6 +116,57 @@ RUN set -ex; \
     find -mindepth 2 -name "$f" -exec cp -v "$f" '{}' ';'; \
   done; \
   \
+  GCC_VERSION_MAJOR="$(echo "$GCC_VERSION" | cut -d '.' -f 1)"; \
+  GCC_VERSION_MINOR="$(echo "$GCC_VERSION" | cut -d '.' -f 2)"; \
+# libgo: handle stat st_atim32 field and SYS_SECCOMP
+# https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=762fd5e5547e464e25b4bee435db6df4eda0de90
+  if [ "$GCC_VERSION_MAJOR" -lt 11 ]; then \
+    patch -p1 < patches/backports/5.5.0/libgo-sys_seccomp.patch; \
+  elif [ "$GCC_VERSION_MAJOR" -lt 13 ]; then \
+    patch -p1 < patches/backports/11.5.0/libgo-sys_seccomp.patch; \
+  fi; \
+# libsanitizer: merge from upstream (87e6e490e79384a5)
+# https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=d96e14ceb9475f9bccbbc0325d5b11419fad9246
+# [sanitizer] Remove crypt and crypt_r interceptors
+# https://github.com/llvm/llvm-project/commit/d7bead833631486e337e541e692d9b4a1ca14edd
+  if [ "$GCC_VERSION_MAJOR" -ge 10 -a "$GCC_VERSION_MAJOR" -lt 12 ]; then \
+    patch -p1 < patches/backports/10.5.0/libsanitizer-remove-crypt-and-crypt_r-interceptors.patch; \
+  elif [ "$GCC_VERSION_MAJOR" -eq 12 ]; then \
+    patch -p1 < patches/backports/12.5.0/libsanitizer-remove-crypt-and-crypt_r-interceptors.patch; \
+  elif [ "$GCC_VERSION_MAJOR" -eq 13 ]; then \
+    patch -p1 < patches/backports/13.4.0/libsanitizer-remove-crypt-and-crypt_r-interceptors.patch; \
+  fi; \
+# libsanitizer: Fix build with glibc 2.42
+# https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=1789c57dc97ea2f9819ef89e28bf17208b6208e7
+  if [ "$GCC_VERSION_MAJOR" -lt 10 ]; then \
+    patch -p1 < patches/backports/5.5.0/libsanitizer-glibc-2.42.patch; \
+  elif [ "$GCC_VERSION_MAJOR" -lt 12 ]; then \
+    patch -p1 < patches/backports/10.5.0/libsanitizer-glibc-2.42.patch; \
+  elif [ "$GCC_VERSION_MAJOR" -eq 15 -a "$GCC_VERSION_MINOR" -lt 2 ] || \
+    [ "$GCC_VERSION_MAJOR" -eq 14 -a "$GCC_VERSION_MINOR" -lt 4 ] || \
+    [ "$GCC_VERSION_MAJOR" -eq 13 -a "$GCC_VERSION_MINOR" -lt 5 ] || \
+    [ "$GCC_VERSION_MAJOR" -eq 12 ]; then \
+    curl -fL "https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=1789c57dc97ea2f9819ef89e28bf17208b6208e7" | patch -p1; \
+  fi; \
+# [sanitizer_common] Remove reference to obsolete termio ioctls (#138822)
+# https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=dbe0ba6c90d53229613c7eb3f476580ae1b9aae1
+  if [ "$GCC_VERSION_MAJOR" -lt 10 ]; then \
+    patch -p1 < patches/backports/5.5.0/libsanitizer-termio-ioctls.patch; \
+  elif [ "$GCC_VERSION_MAJOR" -eq 15 -a "$GCC_VERSION_MINOR" -lt 2 ] || \
+    [ "$GCC_VERSION_MAJOR" -eq 14 -a "$GCC_VERSION_MINOR" -lt 4 ] || \
+    [ "$GCC_VERSION_MAJOR" -eq 13 -a "$GCC_VERSION_MINOR" -lt 5 ] || \
+    [ "$GCC_VERSION_MAJOR" -le 12 ]; then \
+    curl -fL "https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=dbe0ba6c90d53229613c7eb3f476580ae1b9aae1" | patch -p1; \
+  fi; \
+# [PATCH] libgomp: Fix GCC build after glibc@cd748a6
+# https://gcc.gnu.org/git/?p=gcc.git;a=commit;h=9c9d3aef2f66625d9cb03ef4baee10ed6648e681
+  if [ "$GCC_VERSION_MAJOR" -eq 15 -a "$GCC_VERSION_MINOR" -lt 3 ] || \
+    [ "$GCC_VERSION_MAJOR" -eq 14 -a "$GCC_VERSION_MINOR" -lt 4 ] || \
+    [ "$GCC_VERSION_MAJOR" -eq 13 -a "$GCC_VERSION_MINOR" -lt 5 ] || \
+    [ "$GCC_VERSION_MAJOR" -le 12 ]; then \
+    curl -fL "https://gcc.gnu.org/git/?p=gcc.git;a=patch;h=9c9d3aef2f66625d9cb03ef4baee10ed6648e681" | patch -p1; \
+  fi; \
+  \
   dir="$(mktemp -d)"; \
   cd "$dir"; \
   \
@@ -128,7 +180,7 @@ case "$dpkgArch" in \
     extraConfigureArgs="$extraConfigureArgs --with-arch=armv5te --with-float=soft" \
   ;; \
   armhf) \
-    if [ "$(echo "${GCC_VERSION}" | cut -d '.' -f 1)" -ge 11 ]; then \
+    if [ "$GCC_VERSION_MAJOR" -ge 11 ]; then \
       # https://bugs.launchpad.net/ubuntu/+source/gcc-defaults/+bug/1939379/comments/2
       extraConfigureArgs="$extraConfigureArgs --with-arch=armv7-a+fp --with-float=hard --with-mode=thumb"; \
     else \

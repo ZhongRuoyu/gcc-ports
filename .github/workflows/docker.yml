@@ -29,6 +29,7 @@ jobs:
           - trixie
           - bookworm
           - bullseye
+          - resolute
           - noble
           - jammy
           - focal

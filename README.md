@@ -34,16 +34,17 @@ The following GCC releases are available:
 
 The following Debian/Ubuntu releases are available:
 
-| Release                        | codename as appeared in tags |
-| ------------------------------ | ---------------------------- |
-| Debian 13 (Trixie)             | `trixie`                     |
-| Debian 12 (Bookworm)           | `bookworm`                   |
-| Debian 11 (Bullseye)           | `bullseye`                   |
-| Ubuntu 24.04 (Noble Numbat)    | `noble`                      |
-| Ubuntu 22.04 (Jammy Jellyfish) | `jammy`                      |
-| Ubuntu 20.04 (Focal Fossa)     | `focal`                      |
-| Ubuntu 18.04 (Bionic Beaver)   | `bionic`                     |
-| Ubuntu 16.04 (Xenial Xerus)    | `xenial`                     |
+| Release                         | codename as appeared in tags |
+| ------------------------------- | ---------------------------- |
+| Debian 13 (Trixie)              | `trixie`                     |
+| Debian 12 (Bookworm)            | `bookworm`                   |
+| Debian 11 (Bullseye)            | `bullseye`                   |
+| Ubuntu 26.04 (Resolute Raccoon) | `resolute`                   |
+| Ubuntu 24.04 (Noble Numbat)     | `noble`                      |
+| Ubuntu 22.04 (Jammy Jellyfish)  | `jammy`                      |
+| Ubuntu 20.04 (Focal Fossa)      | `focal`                      |
+| Ubuntu 18.04 (Bionic Beaver)    | `bionic`                     |
+| Ubuntu 16.04 (Xenial Xerus)     | `xenial`                     |
 
 ## License
 

@@ -1,0 +1,100 @@
+diff --git a/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc b/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc
+index abb38ccfa15d21740b466dc17b80031e1211257c..61250226aa562956e4859dd4eb222c227068775d 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc
++++ b/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc
+@@ -9977,41 +9977,6 @@ INTERCEPTOR(SSIZE_T, getrandom, void *buf, SIZE_T buflen, unsigned int flags) {
+ #define INIT_GETRANDOM
+ #endif
+ 
+-#if SANITIZER_INTERCEPT_CRYPT
+-INTERCEPTOR(char *, crypt, char *key, char *salt) {
+-  void *ctx;
+-  COMMON_INTERCEPTOR_ENTER(ctx, crypt, key, salt);
+-  COMMON_INTERCEPTOR_READ_RANGE(ctx, key, internal_strlen(key) + 1);
+-  COMMON_INTERCEPTOR_READ_RANGE(ctx, salt, internal_strlen(salt) + 1);
+-  char *res = REAL(crypt)(key, salt);
+-  if (res != nullptr)
+-    COMMON_INTERCEPTOR_INITIALIZE_RANGE(res, internal_strlen(res) + 1);
+-  return res;
+-}
+-#define INIT_CRYPT COMMON_INTERCEPT_FUNCTION(crypt);
+-#else
+-#define INIT_CRYPT
+-#endif
+-
+-#if SANITIZER_INTERCEPT_CRYPT_R
+-INTERCEPTOR(char *, crypt_r, char *key, char *salt, void *data) {
+-  void *ctx;
+-  COMMON_INTERCEPTOR_ENTER(ctx, crypt_r, key, salt, data);
+-  COMMON_INTERCEPTOR_READ_RANGE(ctx, key, internal_strlen(key) + 1);
+-  COMMON_INTERCEPTOR_READ_RANGE(ctx, salt, internal_strlen(salt) + 1);
+-  char *res = REAL(crypt_r)(key, salt, data);
+-  if (res != nullptr) {
+-    COMMON_INTERCEPTOR_WRITE_RANGE(ctx, data,
+-                                   __sanitizer::struct_crypt_data_sz);
+-    COMMON_INTERCEPTOR_INITIALIZE_RANGE(res, internal_strlen(res) + 1);
+-  }
+-  return res;
+-}
+-#define INIT_CRYPT_R COMMON_INTERCEPT_FUNCTION(crypt_r);
+-#else
+-#define INIT_CRYPT_R
+-#endif
+-
+ #if SANITIZER_INTERCEPT_GETENTROPY
+ INTERCEPTOR(int, getentropy, void *buf, SIZE_T buflen) {
+   void *ctx;
+@@ -10521,8 +10486,6 @@ static void InitializeCommonInterceptors() {
+   INIT_GETUSERSHELL;
+   INIT_SL_INIT;
+   INIT_GETRANDOM;
+-  INIT_CRYPT;
+-  INIT_CRYPT_R;
+   INIT_GETENTROPY;
+   INIT_QSORT;
+   INIT_QSORT_R;
+diff --git a/libsanitizer/sanitizer_common/sanitizer_platform_interceptors.h b/libsanitizer/sanitizer_common/sanitizer_platform_interceptors.h
+index 14610f2df78df5a002ac8419e8d103dd0b961e05..787db66ae2b7a2129d098c45d272d9e0ef844dda 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_platform_interceptors.h
++++ b/libsanitizer/sanitizer_common/sanitizer_platform_interceptors.h
+@@ -568,8 +568,6 @@
+ #define SANITIZER_INTERCEPT_FDEVNAME SI_FREEBSD
+ #define SANITIZER_INTERCEPT_GETUSERSHELL (SI_POSIX && !SI_ANDROID)
+ #define SANITIZER_INTERCEPT_SL_INIT (SI_FREEBSD || SI_NETBSD)
+-#define SANITIZER_INTERCEPT_CRYPT (SI_POSIX && !SI_ANDROID)
+-#define SANITIZER_INTERCEPT_CRYPT_R (SI_LINUX && !SI_ANDROID)
+ 
+ #define SANITIZER_INTERCEPT_GETRANDOM \
+   ((SI_LINUX && __GLIBC_PREREQ(2, 25)) || SI_FREEBSD)
+diff --git a/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.cpp b/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.cpp
+index c335f33dda5854f9060505b51cf1bf868707f506..bfdccd5df07836eacf92977e60c574bcd82c52b8 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.cpp
++++ b/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.cpp
+@@ -154,7 +154,6 @@ typedef struct user_fpregs elf_fpregset_t;
+ #include <linux/serial.h>
+ #include <sys/msg.h>
+ #include <sys/ipc.h>
+-#include <crypt.h>
+ #endif  // SANITIZER_ANDROID
+ 
+ #include <link.h>
+@@ -254,7 +253,6 @@ namespace __sanitizer {
+   unsigned struct_ustat_sz = SIZEOF_STRUCT_USTAT;
+   unsigned struct_rlimit64_sz = sizeof(struct rlimit64);
+   unsigned struct_statvfs64_sz = sizeof(struct statvfs64);
+-  unsigned struct_crypt_data_sz = sizeof(struct crypt_data);
+ #endif // SANITIZER_LINUX && !SANITIZER_ANDROID
+ 
+ #if SANITIZER_LINUX && !SANITIZER_ANDROID
+diff --git a/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.h b/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.h
+index da53b5abef273539b84b1072dd7243507105dfa3..2605bb849a78725dbb5b16b82d903bd5cc2ede05 100644
+--- a/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.h
++++ b/libsanitizer/sanitizer_common/sanitizer_platform_limits_posix.h
+@@ -298,7 +298,6 @@ extern unsigned struct_msqid_ds_sz;
+ extern unsigned struct_mq_attr_sz;
+ extern unsigned struct_timex_sz;
+ extern unsigned struct_statvfs_sz;
+-extern unsigned struct_crypt_data_sz;
+ #endif  // SANITIZER_LINUX && !SANITIZER_ANDROID
+ 
+ struct __sanitizer_iovec {
