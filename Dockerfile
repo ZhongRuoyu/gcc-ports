@@ -160,12 +160,6 @@ case "$dpkgArch" in \
   [ -z "$savedAptMark" ] || apt-mark manual $savedAptMark; \
   apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
 
-# gcc installs .so files in /usr/local/lib64 (and /usr/local/lib)...
-RUN set -ex; \
-# this filename needs to sort higher than all the architecture filenames ("aarch64-...", "armeabi...", etc)
-  { echo '/usr/local/lib64'; echo '/usr/local/lib'; } > /etc/ld.so.conf.d/000-local-lib.conf; \
-  ldconfig -v
-
 # ensure that alternatives are pointing to the new compiler and that old one is no longer used
 RUN set -ex; \
   dpkg-divert --divert /usr/bin/gcc.orig --rename /usr/bin/gcc; \
