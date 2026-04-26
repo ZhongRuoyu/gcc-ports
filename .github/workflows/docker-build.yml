@@ -17,6 +17,8 @@ env:
   DOCKERHUB_REPOSITORY: zhongruoyu/gcc-ports
   GHCR_USERNAME: zhongruoyu
   GHCR_REPOSITORY: ghcr.io/zhongruoyu/gcc-ports
+  BUILD_CACHE_REPOSITORY: ghcr.io/zhongruoyu/gcc-ports-cache
+  BUILD_CONFIG: ${{ inputs.gcc-version }}-${{ inputs.base-image-tag }}
 
 jobs:
   build:
@@ -63,19 +65,21 @@ jobs:
             GCC_VERSION
             BINUTILS_VERSION
             BINUTILS_SHA256
+          cache-from: type=registry,ref=${{ env.BUILD_CACHE_REPOSITORY }}:${{ env.BUILD_CONFIG }}-${{ env.ARCH }}
+          cache-to: type=registry,ref=${{ env.BUILD_CACHE_REPOSITORY }}:${{ env.BUILD_CONFIG }}-${{ env.ARCH }},mode=max
           outputs: |
             type=image,name=${{ env.DOCKERHUB_REPOSITORY }},name-canonical=true,push=true,push-by-digest=true
             type=image,name=${{ env.GHCR_REPOSITORY }},name-canonical=true,push=true,push-by-digest=true
       - name: Export digest
         run: |
           mkdir -p "$RUNNER_TEMP"/digests
-          echo "${DIGEST#sha256:}" > "$RUNNER_TEMP/digests/$GCC_VERSION-$BASE_IMAGE_TAG-$ARCH"
+          echo "${DIGEST#sha256:}" > "$RUNNER_TEMP/digests/$BUILD_CONFIG-$ARCH"
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
       - name: Upload digest
         uses: actions/upload-artifact@v7
         with:
-          name: digest-${{ inputs.gcc-version }}-${{ inputs.base-image-tag }}-${{ matrix.arch }}
+          name: digest-${{ env.BUILD_CONFIG }}-${{ env.ARCH }}
           path: ${{ runner.temp }}/digests/*
 
   merge:
@@ -106,16 +110,18 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           path: ${{ runner.temp }}/digests
-          pattern: digest-${{ inputs.gcc-version }}-${{ inputs.base-image-tag }}-*
+          pattern: digest-${{ env.BUILD_CONFIG }}-*
           merge-multiple: true
       - name: Create manifest list and push
         run: |
+          GCC_VERSION_MAJOR="$(echo "$GCC_VERSION" | cut -d '.' -f 1)"
+          GCC_VERSION_MAJOR_MINOR="$(echo "$GCC_VERSION" | cut -d '.' -f 1-2)"
           docker buildx imagetools create \
-            --tag="$DOCKERHUB_REPOSITORY:$GCC_VERSION-$BASE_IMAGE_TAG" \
-            --tag="$DOCKERHUB_REPOSITORY:$(echo "$GCC_VERSION" | cut -d '.' -f 1-2)-$BASE_IMAGE_TAG" \
-            --tag="$DOCKERHUB_REPOSITORY:$(echo "$GCC_VERSION" | cut -d '.' -f 1)-$BASE_IMAGE_TAG" \
-            --tag="$GHCR_REPOSITORY:$GCC_VERSION-$BASE_IMAGE_TAG" \
-            --tag="$GHCR_REPOSITORY:$(echo "$GCC_VERSION" | cut -d '.' -f 1-2)-$BASE_IMAGE_TAG" \
-            --tag="$GHCR_REPOSITORY:$(echo "$GCC_VERSION" | cut -d '.' -f 1)-$BASE_IMAGE_TAG" \
-            "$GHCR_REPOSITORY@sha256:$(cat "$RUNNER_TEMP/digests/$GCC_VERSION-$BASE_IMAGE_TAG-x86_64")" \
-            "$GHCR_REPOSITORY@sha256:$(cat "$RUNNER_TEMP/digests/$GCC_VERSION-$BASE_IMAGE_TAG-aarch64")"
+            --tag="$DOCKERHUB_REPOSITORY:$BUILD_CONFIG" \
+            --tag="$DOCKERHUB_REPOSITORY:$GCC_VERSION_MAJOR_MINOR-$BASE_IMAGE_TAG" \
+            --tag="$DOCKERHUB_REPOSITORY:$GCC_VERSION_MAJOR-$BASE_IMAGE_TAG" \
+            --tag="$GHCR_REPOSITORY:$BUILD_CONFIG" \
+            --tag="$GHCR_REPOSITORY:$GCC_VERSION_MAJOR_MINOR-$BASE_IMAGE_TAG" \
+            --tag="$GHCR_REPOSITORY:$GCC_VERSION_MAJOR-$BASE_IMAGE_TAG" \
+            "$GHCR_REPOSITORY@sha256:$(cat "$RUNNER_TEMP/digests/$BUILD_CONFIG-x86_64")" \
+            "$GHCR_REPOSITORY@sha256:$(cat "$RUNNER_TEMP/digests/$BUILD_CONFIG-aarch64")"
