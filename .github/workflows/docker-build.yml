@@ -65,7 +65,7 @@ jobs:
             GCC_VERSION
             BINUTILS_VERSION
             BINUTILS_SHA256
-          cache-from: type=registry,ref=ghcr.io/zhongruoyu/gcc-ports-cache:${{ env.BUILD_CONFIG }}-${{ env.ARCH }}
+          cache-from: type=registry,ref=${{ env.BUILD_CACHE_REPOSITORY }}:${{ env.BUILD_CONFIG }}-${{ env.ARCH }}
           cache-to: type=registry,ref=${{ env.BUILD_CACHE_REPOSITORY }}:${{ env.BUILD_CONFIG }}-${{ env.ARCH }},mode=max
           outputs: |
             type=image,name=${{ env.DOCKERHUB_REPOSITORY }},name-canonical=true,push=true,push-by-digest=true
