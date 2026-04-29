@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   schedule:
     - cron: "0 0 1 * *"
 
@@ -39,4 +42,5 @@ jobs:
     with:
       gcc-version: ${{ matrix.gcc-version }}
       base-image-tag: ${{ matrix.base-image-tag }}
+      push: ${{ github.ref_name == 'main' }}
     secrets: inherit
