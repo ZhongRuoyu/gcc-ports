@@ -24,6 +24,7 @@ The following GCC releases are available:
 
 | GCC release | versions as appeared in tags |
 | ----------- | ---------------------------- |
+| GCC 16.1.0  | `16`, `16.1`, `16.1.0`       |
 | GCC 15.2.0  | `15`, `15.2`, `15.2.0`       |
 | GCC 14.3.0  | `14`, `14.3`, `14.3.0`       |
 | GCC 13.4.0  | `13`, `13.4`, `13.4.0`       |
