@@ -20,10 +20,34 @@ env:
   GHCR_USERNAME: zhongruoyu
   GHCR_REPOSITORY: ghcr.io/zhongruoyu/gcc-ports
   BUILD_CACHE_REPOSITORY: ghcr.io/zhongruoyu/gcc-ports/cache
+  GCC_VERSION: ${{ inputs.gcc-version }}
+  BASE_IMAGE_TAG: ${{ inputs.base-image-tag }}
   BUILD_CONFIG: ${{ inputs.gcc-version }}-${{ inputs.base-image-tag }}
 
 jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    outputs:
+      tags: ${{ steps.metadata.outputs.tags }}
+      labels: ${{ steps.metadata.outputs.labels }}
+    steps:
+      - name: Determine metadata
+        id: metadata
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+        with:
+          images: |
+            ${{ env.DOCKERHUB_REPOSITORY }}
+            ${{ env.GHCR_REPOSITORY }}
+          flavor: |
+            latest=false
+            suffix=-${{ env.BASE_IMAGE_TAG }}
+          tags: |
+            type=pep440,value=${{ env.GCC_VERSION }},pattern={{version}}
+            type=pep440,value=${{ env.GCC_VERSION }},pattern={{major}}.{{minor}}
+            type=pep440,value=${{ env.GCC_VERSION }},pattern={{major}}
+
   build:
+    needs: metadata
     strategy:
       fail-fast: false
       matrix:
@@ -36,8 +60,6 @@ jobs:
       contents: read
       packages: write
     env:
-      GCC_VERSION: ${{ inputs.gcc-version }}
-      BASE_IMAGE_TAG: ${{ inputs.base-image-tag }}
       ARCH: ${{ matrix.arch }}
     steps:
       - name: Checkout repository
@@ -84,6 +106,7 @@ jobs:
         uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
         with:
           platforms: linux/${{ matrix.arch }}
+          labels: ${{ needs.metadata.outputs.labels }}
           build-args: |
             BASE_IMAGE=public.ecr.aws/docker/library/buildpack-deps:${{ env.BASE_IMAGE_TAG }}
             GCC_VERSION
@@ -106,15 +129,12 @@ jobs:
 
   merge:
     if: inputs.push
-    needs: build
+    needs: [metadata, build]
     name: Merge ${{ inputs.gcc-version }} - ${{ inputs.base-image-tag }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-    env:
-      GCC_VERSION: ${{ inputs.gcc-version }}
-      BASE_IMAGE_TAG: ${{ inputs.base-image-tag }}
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
@@ -137,14 +157,15 @@ jobs:
           merge-multiple: true
       - name: Create manifest list and push
         run: |
-          GCC_VERSION_MAJOR="$(echo "$GCC_VERSION" | cut -d '.' -f 1)"
-          GCC_VERSION_MAJOR_MINOR="$(echo "$GCC_VERSION" | cut -d '.' -f 1-2)"
-          docker buildx imagetools create \
-            --tag="$DOCKERHUB_REPOSITORY:$BUILD_CONFIG" \
-            --tag="$DOCKERHUB_REPOSITORY:$GCC_VERSION_MAJOR_MINOR-$BASE_IMAGE_TAG" \
-            --tag="$DOCKERHUB_REPOSITORY:$GCC_VERSION_MAJOR-$BASE_IMAGE_TAG" \
-            --tag="$GHCR_REPOSITORY:$BUILD_CONFIG" \
-            --tag="$GHCR_REPOSITORY:$GCC_VERSION_MAJOR_MINOR-$BASE_IMAGE_TAG" \
-            --tag="$GHCR_REPOSITORY:$GCC_VERSION_MAJOR-$BASE_IMAGE_TAG" \
-            "$GHCR_REPOSITORY@sha256:$(cat "$RUNNER_TEMP/digests/$BUILD_CONFIG-x86_64")" \
+          mapfile -t tags <<< "$TAGS"
+          tag_args=()
+          for tag in "${tags[@]}"; do
+            tag_args+=(--tag="$tag")
+          done
+          images=(
+            "$GHCR_REPOSITORY@sha256:$(cat "$RUNNER_TEMP/digests/$BUILD_CONFIG-x86_64")"
             "$GHCR_REPOSITORY@sha256:$(cat "$RUNNER_TEMP/digests/$BUILD_CONFIG-aarch64")"
+          )
+          docker buildx imagetools create "${tag_args[@]}" "${images[@]}"
+        env:
+          TAGS: ${{ needs.metadata.outputs.tags }}
