@@ -43,5 +43,5 @@ jobs:
     with:
       gcc-version: ${{ matrix.gcc-version }}
       base-image-tag: ${{ matrix.base-image-tag }}
-      push: ${{ github.ref_name == 'main' }}
+      push: ${{ github.ref == 'refs/heads/main' }}
     secrets: inherit
