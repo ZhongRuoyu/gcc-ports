@@ -1,4 +1,4 @@
-name: Build and push Docker images
+name: Docker
 
 on:
   workflow_dispatch:
@@ -14,6 +14,12 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash -euxo pipefail {0}
 
 jobs:
   build:
@@ -39,9 +45,14 @@ jobs:
           - focal
           - bionic
           - xenial
+    name: Build ${{ matrix.gcc-version }} - ${{ matrix.base-image-tag }}
     uses: ./.github/workflows/docker-build.yml
+    secrets:
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+    permissions:
+      contents: read
+      packages: write # for pushing image and cache
     with:
       gcc-version: ${{ matrix.gcc-version }}
       base-image-tag: ${{ matrix.base-image-tag }}
       push: ${{ github.ref == 'refs/heads/main' }}
-    secrets: inherit
