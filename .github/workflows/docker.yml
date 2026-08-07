@@ -27,7 +27,7 @@ jobs:
       fail-fast: false
       matrix:
         gcc-version:
-          - "16.1.0"
+          - "16.2.0"
           - "15.3.0"
           - "14.4.0"
           - "13.4.0"
