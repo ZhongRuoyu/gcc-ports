@@ -14,7 +14,7 @@ RUN set -ex; \
   ; \
   rm -r /var/lib/apt/lists/*; \
   \
-  curl -fL "https://ftpmirror.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.xz" -o 'binutils.tar.xz'; \
+  curl -fL "https://ftp.gnu.org/gnu/binutils/binutils-$BINUTILS_VERSION.tar.xz" -o 'binutils.tar.xz'; \
   echo "${BINUTILS_SHA256}  binutils.tar.xz" | sha256sum -c; \
   mkdir -p /usr/src/binutils; \
   tar -xf binutils.tar.xz -C /usr/src/binutils --strip-components=1; \
